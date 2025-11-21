@@ -25,8 +25,4 @@
 #        lnum.pop()
 #        lnum.append(i)
 #print("the largest number is:", lnum)
-
-d={"name""a":"ragav","age":20,"city":"chennai"}
-print(d)
-
     
