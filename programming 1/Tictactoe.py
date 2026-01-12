@@ -1,50 +1,96 @@
 from tkinter import *
 from tkinter import messagebox
 
+# Game Logic
 
-root= Tk()
+def create_board():
+    return [" "]*9
+
+def make_move(board,index,player):
+    if board[index]==" ":
+        board[index]=player
+        return True
+    return False
+
+def check_winner(board):
+    win_patterns=[
+        (0,1,2),(3,4,5),(6,7,8),
+        (0,3,6),(1,4,7),(2,5,8),
+        (0,4,8),(2,4,6)
+    ]
+    for a,b,c in win_patterns:
+        if board[a]==board[b]==board[c]!=" ":
+            return board[a],(a,b,c)
+    return None,None
+
+def is_draw(board):
+    return " " not in board
+
+# GUI Layer 
+
+root = Tk()
 root.title("Tic Tac Toe")
+current_player="X"
+game_over=False
+board=create_board()
+buttons=[]
 
-count=0
-clicked = True
-
-#Buttons Clicked
-def b_click(b):
-    global clicked, count
-    if b['text'] == " " and clicked == True:
-        b['text']= "X"
-        clicked = False
-        count += 1
-    elif b['text']== ' ' and clicked == False:
-        b['text']= "0"
-        clicked = True
-        count += 1
+def update_title():
+    if not game_over:
+        root.title(f"Tic Tac Toe - {current_player}'s turn")
     else:
-        messagebox.showerror("Tic Tac Toe", "Button is already occupied \n Please choose another box")
+        root.title("Tic Tac Toe - Game Over")
 
+def highlight_winning_line(indices):
+    for i in indices:
+        buttons[i].config(highlightbackground="light green")
 
-# Building Buttons
+def end_game(message):
+    global game_over
+    game_over=True
+    for i in buttons:
+        i.config(state=DISABLED)
+    messagebox.showinfo("Tic Tac Toe",message)
+    update_title()
 
-b1 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b1))
-b2 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b2))
-b3 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b3))
-b4 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b4))
-b5 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b5))
-b6 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b6))
-b7 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b7))
-b8 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b8))
-b9 = Button(root, text=" ", width=6, height=3,bg="white",font=('Helvetica', 24), command=lambda: b_click(b9))
+def handle_button(index):
+    global current_player,game_over
+    if game_over:
+        return
+    if not make_move(board,index,current_player):
+        messagebox.showerror("Tic Tac Toe","Cell already occupied!")
 
-# Grid the buttons
+        return
+    
+    buttons[index].config(text=current_player)
+    winner,win_indices=check_winner(board)
+    if winner:
+        highlight_winning_line(win_indices)
+        end_game(f"{winner} wins!")
+        return
+    if is_draw(board):
+        end_game("its a tie")
+        return
+    current_player="O" if current_player=='X' else 'X'
+    update_title()
 
-b1.grid(row=0, column=0)
-b2.grid(row=0, column=1)
-b3.grid(row=0, column=2)
-b4.grid(row=1, column=0)
-b5.grid(row=1, column=1)
-b6.grid(row=1, column=2)
-b7.grid(row=2, column=0)
-b8.grid(row=2, column=1)
-b9.grid(row=2, column=2)
+# Create buttons
+for i in range(9):
+    btn=Button(root,text=" ",width=6,height=3,bg="white",command=lambda idx=i:handle_button(idx))
+    btn.grid(row=i//3,column=i%3)
+    buttons.append(btn)
 
+def newgame():
+    global board,current_player,game_over
+    board=create_board()
+    current_player="X"
+    game_over=False
+    for btn in buttons:
+        btn.config(text=" ",state=NORMAL,highlightbackground="white")
+    update_title()
+new_game_btn=Button(root,text="new game",command= newgame)
+new_game_btn.grid(row=3,column=0,columnspan=3)
+
+update_title()
 root.mainloop()
+
